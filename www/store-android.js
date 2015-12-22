@@ -960,11 +960,25 @@ store.verbosity = 0;
                 for (var i = 0; i < purchases.length; ++i) {
                     var purchase = purchases[i];
                     var p = store.get(purchase.productId);
+                    // *** arielf 22/12/2015 fix: make non-registered purchases available
                     if (!p) {
-                        store.log.warn("plugin -> user owns a non-registered product");
-                        continue;
+                        //store.log.warn("plugin -> user owns a non-registered product");
+                        //continue;
+
+                        store.log.warn("plugin -> registering unregistered purchased product");
+                        store.register({
+                            id:    purchase.productId,
+                            type:  store.NON_CONSUMABLE
+                        });  
+
+                        store.load();
+                        store.once(purchase.productId, "loaded", function(product) {
+                            store.log.debug("plugin -> product loaded -> " + JSON.stringify(product));
+                            store.setProductData(product, purchase);                  
+                        });
                     }
-                    store.setProductData(p, purchase);
+                    //store.setProductData(p, purchase);
+                    // *** end fix
                 }
             }
             store.ready(true);
