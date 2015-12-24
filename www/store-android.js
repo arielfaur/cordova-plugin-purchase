@@ -972,10 +972,8 @@ store.verbosity = 0;
                         });  
 
                         store.load();
-                        store.once(purchase.productId, "loaded", function(product) {
-                            store.log.debug("plugin -> product loaded -> " + JSON.stringify(product));
-                            store.setProductData(product, purchase);                  
-                        });
+                        p = store.get(purchase.productId);
+                        store.setProductData(p, purchase); 
                     }
                     //store.setProductData(p, purchase);
                     // *** end fix
