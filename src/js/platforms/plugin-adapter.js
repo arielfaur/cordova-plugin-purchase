@@ -94,39 +94,36 @@ function iabLoaded(validProducts) {
 }
 
 function iabGetPurchases() {
-    store.inappbilling.getPurchases(
-        function(purchases) { // success
-            // example purchases data:
-            //
-            // [
-            //   {
-            //     "purchaseToken":"tokenabc",
-            //     "developerPayload":"mypayload1",
-            //     "packageName":"com.example.MyPackage",
-            //     "purchaseState":0,
-            //     "orderId":"12345.6789",
-            //     "purchaseTime":1382517909216,
-            //     "productId":"example_subscription"
-            //   },
-            //   { ... }
-            // ]
-            if (purchases && purchases.length) {
-                for (var i = 0; i < purchases.length; ++i) {
-                    var purchase = purchases[i];
-                    var p = store.get(purchase.productId);
-                    if (!p) {
-                        store.log.warn("plugin -> user owns a non-registered product");
-                        continue;
-                    }
-                    store.setProductData(p, purchase);
+    store.inappbilling.getPurchases(function(purchases) {
+        if (purchases && purchases.length) {
+            for (var i = 0; i < purchases.length; ++i) {
+                var purchase = purchases[i];
+                var p = store.get(purchase.productId);
+                // *** arielf 22/12/2015 fix: make non-registered purchases available
+                if (!p) {
+                    //store.log.warn("plugin -> user owns a non-registered product");
+                    //continue;
+
+                    store.log.warn("plugin -> registering unregistered purchased product");
+                    store.register({
+                        id:    purchase.productId,
+                        type:  store.NON_CONSUMABLE
+                    });  
+
+                    store.load();
+                    p = store.get(purchase.productId);
+                    store.setProductData(p, purchase); 
+                    //store.when(purchase.productId, "loaded", function(product) {
+                    //    store.log.debug("plugin -> product loaded -> " + JSON.stringify(product));
+                    //    store.setProductData(product, purchase);                  
+                    //});
                 }
+                //store.setProductData(p, purchase);
+                // *** end fix
             }
-            store.ready(true);
-        },
-        function() { // error
-            // TODO
         }
-    );
+        store.ready(true);
+    }, function() {});
 }
 
 //   {
